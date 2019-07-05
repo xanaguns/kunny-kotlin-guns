@@ -110,7 +110,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     }
 
     private fun searchRepository(query: String) {
-        ///*
+        /*
         clearResults()
         hideError()
         showProgress()
