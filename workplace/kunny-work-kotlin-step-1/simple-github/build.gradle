@@ -1,0 +1,60 @@
+apply plugin: 'com.android.application'
+
+// 코틀린 안드로이드 플러그인을 적용합니다.
+apply plugin: 'kotlin-android'
+
+// 코틀린 안드로이드 익스텐션 플러그인을 적용합니다.
+apply plugin: 'kotlin-android-extensions'
+
+// 코틀린 코드에서 어노테이션 프로세싱을 사용할 수 있도록 kotlin-kapt 플러그인을 추가로 적용합니다.
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.androidhuman.example.simplegithub"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        buildConfigField "String", "GITHUB_CLIENT_ID",
+                project.properties["GITHUB_CLIENT_ID"] ?: "\"NOT_FOUND\""
+
+        buildConfigField "String", "GITHUB_CLIENT_SECRET",
+                project.properties["GITHUB_CLIENT_SECRET"] ?: "\"NOT_FOUND\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // 코틀린 코드를 저장할 폴더를 소스 디렉토리로 등록합니다.
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+dependencies {
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "com.android.support:customtabs:$supportLibVersion"
+    implementation "com.android.support:design:$supportLibVersion"
+    implementation "com.android.support:recyclerview-v7:$supportLibVersion"
+    implementation "com.github.bumptech.glide:glide:$glideVersion"
+    implementation "com.google.code.gson:gson:$gsonVersion"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okHttpVersion"
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+    implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    implementation "org.jetbrains.anko:anko-commons:$ankoVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+
+    // 코틀린 어노테이션 프로세서에서 처리될 수 있도록 의존성에 추가합니다.
+    //annotationProcessor "com.github.bumptech.glide:compiler:$glideVersion"
+    kapt "com.github.bumptech.glide:compiler:$glideVersion"
+}
