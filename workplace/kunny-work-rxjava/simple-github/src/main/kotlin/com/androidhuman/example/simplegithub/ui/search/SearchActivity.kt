@@ -14,6 +14,10 @@ import com.androidhuman.example.simplegithub.api.provideGithubApi
 // 연산자 오버로딩 함수를 import 문에 추가합니다.
 import com.androidhuman.example.simplegithub.extensions.plusAssign
 import com.androidhuman.example.simplegithub.ui.repo.RepositoryActivity
+//[ By RxJava-rxBinding
+import com.jakewharton.rxbinding2.support.v7.widget.RxSearchView
+import com.jakewharton.rxbinding2.support.v7.widget.queryTextChangeEvents
+//]
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -45,6 +49,11 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     internal val disposables = CompositeDisposable()
     //]
 
+    //[ By RxJava-rxBinding
+    // viewDisposables 프로퍼티를 추가합니다.
+    internal val viewDisposables = CompositeDisposable()
+    //]
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
@@ -60,6 +69,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         menuInflater.inflate(R.menu.menu_activity_search, menu)
         menuSearch = menu.findItem(R.id.menu_activity_search_query)
 
+        /*
         // menuSearch.actionView를 SearchView로 캐스팅합니다.
         // apply() 함수를 사용하여 객체 생성과 리스너 지정을 동시에 수행합니다.
         searchView = (menuSearch.actionView as SearchView).apply {
@@ -78,6 +88,42 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                 }
             })
         }
+        // */
+
+        //[ By RxJava-rxBinding
+        searchView = (menuSearch.actionView as SearchView)
+
+        // SearchView에서 발생하는 이벤트를 옵서버블 형태로 받습니다.
+        //viewDisposables += RxSearchView.queryTextChangeEvents(searchView)
+        // SearchView 인스턴스에서 RxBinding에서 제공하는 함수를 직접 호출합니다.
+        viewDisposables += searchView.queryTextChangeEvents()
+
+                // 검색을 수행했을 때 발생한 이벤트만 받습니다.
+                .filter { it.isSubmitted }
+
+                // 이벤트에서 검색어 텍스트(CharSequence)를 추출합니다.
+                .map { it.queryText() }
+
+                // 빈 문자열이 아닌 검색어만 받습니다.
+                .filter { it.isNotEmpty() }
+
+                // 검색어를 String 형태로 변환합니다.
+                .map { it.toString() }
+
+                // 이 이후에 수행되는 코드는 모두 메인 스레드에서 실행합니다.
+                // RxAndroid에서 제공하는 스케줄러인 AndroidSchedulers.mainThread()를 사용합니다.
+                .observeOn(AndroidSchedulers.mainThread())
+
+                // 옵서버블을 구독합니다.
+                .subscribe { query ->
+
+                    // 검색 절차를 수행합니다.
+                    updateTitle(query)
+                    hideSoftKeyboard()
+                    collapseSearchView()
+                    searchRepository(query)
+                }
+        //]
 
         // with() 함수를 사용하여 menuSearch 범위 내에서 작업을 수행합니다.
         with(menuSearch) {
@@ -119,6 +165,14 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         // 관리하고 있던 디스포저블 객체를 모두 해제합니다.
         // searchCall?.run { cancel() } 대신 사용합니다.
         disposables.clear()
+        //]
+
+        //[ By RxJava-rxBinding
+        // 액티비티가 완전히 종료되고 있는 경우에만 관리하고 있는 디스포저블을 해제합니다.
+        // 화면이 꺼지거나 다른 액티비티를 호출하여 액티비티가 화면에서 사라지는 경우에는 해제하지 않습니다.
+        if (isFinishing) {
+            viewDisposables.clear()
+        }
         //]
     }
 
