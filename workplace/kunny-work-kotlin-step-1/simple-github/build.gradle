@@ -52,7 +52,7 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
     implementation "org.jetbrains.anko:anko-commons:$ankoVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
     // 코틀린 어노테이션 프로세서에서 처리될 수 있도록 의존성에 추가합니다.
     //annotationProcessor "com.github.bumptech.glide:compiler:$glideVersion"

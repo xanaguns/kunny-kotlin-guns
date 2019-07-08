@@ -1,7 +1,12 @@
 apply plugin: 'com.android.application'
+
+// 코틀린 안드로이드 플러그인을 적용합니다.
 apply plugin: 'kotlin-android'
-// 코틀린 안드로이드 익스펜션 플러그인을 적용합니다.
+
+// 코틀린 안드로이드 익스텐션 플러그인을 적용합니다.
 apply plugin: 'kotlin-android-extensions'
+
+// 코틀린 코드에서 어노테이션 프로세싱을 사용할 수 있도록 kotlin-kapt 플러그인을 추가로 적용합니다.
 apply plugin: 'kotlin-kapt'
 
 android {
@@ -29,6 +34,7 @@ android {
         }
     }
 
+    // 코틀린 코드를 저장할 폴더를 소스 디렉토리로 등록합니다.
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
@@ -43,14 +49,19 @@ dependencies {
     implementation "com.google.code.gson:gson:$gsonVersion"
     implementation "com.squareup.okhttp3:logging-interceptor:$okHttpVersion"
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    //[ Retrofit에서 받은 응답을 옵서버블로 변환해주는 라이브러리를 추가합니다.
     implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    //]
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
+    //[ RxAndroid와 RxJava 라이브러리를 추가합니다.
     implementation "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
     implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
+    //]
     implementation "org.jetbrains.anko:anko-commons:$ankoVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
+    // 코틀린 어노테이션 프로세서에서 처리될 수 있도록 의존성에 추가합니다.
     //annotationProcessor "com.github.bumptech.glide:compiler:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
 }

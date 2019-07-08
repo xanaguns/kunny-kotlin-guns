@@ -15,8 +15,10 @@ fun provideAuthApi(): AuthApi
         = Retrofit.Builder()
         .baseUrl("https://github.com/")
         .client(provideOkHttpClient(provideLoggingInterceptor(), null))
+        //[ By RxJava
         // 받은 응답을 옵서버블 형태로 변환해주도록 합니다.
         .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
+        //]
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(AuthApi::class.java)
@@ -26,12 +28,15 @@ fun provideGithubApi(context: Context): GithubApi
         .baseUrl("https://api.github.com/")
         .client(provideOkHttpClient(provideLoggingInterceptor(),
                 provideAuthInterceptor(provideAuthTokenProvider(context))))
+        //[ By RxJava
         // 받은 응답을 옵서버블 형태로 변환하며, 비동기 방식으로 API를 호출합니다.
         .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
+        //]
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(GithubApi::class.java)
 
+// run() 함수로 OkHttpClient.Builder() 변수 선언을 제거합니다.
 private fun provideOkHttpClient(
         interceptor: HttpLoggingInterceptor,
         authInterceptor: AuthInterceptor?): OkHttpClient
@@ -58,6 +63,7 @@ private fun provideAuthTokenProvider(context: Context): AuthTokenProvider
 
 internal class AuthInterceptor(private val token: String) : Interceptor {
 
+    // with() 함수와 run() 함수로 추가 변수 선언을 제거합니다.
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response = with(chain) {
         val newRequest = request().newBuilder().run {

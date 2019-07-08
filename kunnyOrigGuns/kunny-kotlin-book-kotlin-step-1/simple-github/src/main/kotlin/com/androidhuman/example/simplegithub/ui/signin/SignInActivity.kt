@@ -22,6 +22,7 @@ import retrofit2.Response
 
 class SignInActivity : AppCompatActivity() {
 
+    // 프로퍼티에 lateinit을 추가합니다.
     internal lateinit var btnStart: Button
 
     internal lateinit var progress: ProgressBar
@@ -39,6 +40,7 @@ class SignInActivity : AppCompatActivity() {
         btnStart = findViewById(R.id.btnActivitySignInStart)
         progress = findViewById(R.id.pbActivitySignIn)
 
+        // View.onClickListener의 본체를 람다 표현식으로 작성합니다.
         btnStart.setOnClickListener {
             val authUri = Uri.Builder().scheme("https").authority("github.com")
                     .appendPath("login")
@@ -64,8 +66,12 @@ class SignInActivity : AppCompatActivity() {
 
         showProgress()
 
+        // 엘비스 연산자를 사용하여 널 값을 검사합니다.
+        // intent.data가 널이라면 IllegalArgumentException 예외를 발생시킵니다.
         val uri = intent.data ?: throw IllegalArgumentException("No data exists")
 
+        // 엘비스 연산자를 사용하여 널 값을 검사합니다.
+        // intent.data?.getQueryParameter("code") 반환값이 널이라면 IllegalArgumentException 예외를 발생시킵니다.
         val code = uri.getQueryParameter("code")
                 ?: throw IllegalStateException("No code exists")
 
@@ -78,6 +84,7 @@ class SignInActivity : AppCompatActivity() {
         accessTokenCall = api.getAccessToken(
                 BuildConfig.GITHUB_CLIENT_ID, BuildConfig.GITHUB_CLIENT_SECRET, code)
 
+        // Call 인터페이스를 구현하는 익명 클래스의 인스턴스를 생성합니다.
         accessTokenCall.enqueue(object : Callback<GithubAccessToken> {
             override fun onResponse(call: Call<GithubAccessToken>,
                     response: Response<GithubAccessToken>) {

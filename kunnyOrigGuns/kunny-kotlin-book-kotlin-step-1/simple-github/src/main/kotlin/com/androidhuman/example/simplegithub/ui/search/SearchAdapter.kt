@@ -11,7 +11,7 @@ import android.widget.TextView
 import com.androidhuman.example.simplegithub.R
 import com.androidhuman.example.simplegithub.api.model.GithubRepo
 import com.androidhuman.example.simplegithub.ui.GlideApp
-import java.util.ArrayList
+import java.util.*
 
 class SearchAdapter : RecyclerView.Adapter<SearchAdapter.RepositoryHolder>() {
 
@@ -26,6 +26,8 @@ class SearchAdapter : RecyclerView.Adapter<SearchAdapter.RepositoryHolder>() {
     }
 
     override fun onBindViewHolder(holder: RepositoryHolder, position: Int) {
+        // items.get(position) 대신 배열 인덱스 접근 연산자를 사용합니다.
+        // 뷰에 표시할 데이터를 받아옵니다.
         val repo = items[position]
 
         GlideApp.with(holder.itemView.context)
@@ -39,6 +41,7 @@ class SearchAdapter : RecyclerView.Adapter<SearchAdapter.RepositoryHolder>() {
         else
             repo.language
 
+        // View.OnClickListener의 본체를 람다 표현식으로 작성합니다.
         holder.itemView.setOnClickListener {
             if (null != listener) {
                 listener!!.onItemClick(repo)
@@ -62,10 +65,13 @@ class SearchAdapter : RecyclerView.Adapter<SearchAdapter.RepositoryHolder>() {
         this.items.clear()
     }
 
+    // 'internal' 키워드를 제거하여 가시성을 'public'으로 변경합니다.
     class RepositoryHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
             LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_repository, parent, false)) {
 
+        // init 블록에서 프로퍼티의 값을 설정해 주고 있으므로
+        // 여기에서 값을 할당하지 않아도 컴파일 에러가 발생하지 않습니다.
         var ivProfile: ImageView
 
         var tvName: TextView
@@ -73,7 +79,7 @@ class SearchAdapter : RecyclerView.Adapter<SearchAdapter.RepositoryHolder>() {
         var tvLanguage: TextView
 
         init {
-
+            // 클래스 생성자 호출시 클래스 내 프로퍼티의 값을 할당합니다.
             ivProfile = itemView.findViewById(R.id.ivItemRepositoryProfile)
             tvName = itemView.findViewById(R.id.tvItemRepositoryName)
             tvLanguage = itemView.findViewById(R.id.tvItemRepositoryLanguage)

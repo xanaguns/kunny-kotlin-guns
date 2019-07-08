@@ -9,6 +9,7 @@ import com.androidhuman.example.simplegithub.ui.search.SearchActivity
 
 class MainActivity : AppCompatActivity() {
 
+    // 프로퍼티에 lateinit을 추가합니다.
     internal lateinit var btnSearch: FloatingActionButton
 
     override fun onCreate(savedInstanceState: Bundle?) {

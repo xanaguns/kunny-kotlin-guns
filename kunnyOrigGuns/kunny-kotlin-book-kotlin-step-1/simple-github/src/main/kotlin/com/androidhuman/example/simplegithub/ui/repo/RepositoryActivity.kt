@@ -21,6 +21,7 @@ import java.util.Locale
 
 class RepositoryActivity : AppCompatActivity() {
 
+    // 프로퍼티에 lateinit을 추가합니다.
     internal lateinit var llContent: LinearLayout
 
     internal lateinit var ivProfile: ImageView
@@ -65,8 +66,13 @@ class RepositoryActivity : AppCompatActivity() {
 
         api = GithubApiProvider.provideGithubApi(this)
 
+        // 엘비스 연산자를 사용하여 널 값을 검사합니다.
+        // KEY_USER_LOGIN 이름으로 문자열 값 포함되어 있지 않다면 IllegalArgumentException 예외를 발생시킵니다.
         val login = intent.getStringExtra(KEY_USER_LOGIN) ?: throw IllegalArgumentException(
                 "No login info exists in extras")
+
+        // 엘비스 연산자를 사용하여 널 값을 검사합니다.
+        // KEY_REPO_NAME 이름으로 문자열 값 포함되어 있지 않다면 IllegalArgumentException 예외를 발생시킵니다.
         val repo = intent.getStringExtra(KEY_REPO_NAME) ?: throw IllegalArgumentException(
                 "No repo info exists in extras")
 
@@ -77,6 +83,8 @@ class RepositoryActivity : AppCompatActivity() {
         showProgress()
 
         repoCall = api.getRepository(login, repoName)
+
+        // Call 인터페이스를 구현하는 익명 클래스의 인스턴스를 생성합니다.
         repoCall.enqueue(object : Callback<GithubRepo> {
             override fun onResponse(call: Call<GithubRepo>, response: Response<GithubRepo>) {
                 hideProgress(true)
@@ -131,10 +139,12 @@ class RepositoryActivity : AppCompatActivity() {
     }
 
     private fun showError(message: String?) {
+        // message가 널 값인 경우 "Unexpected error." 메시지를 표시합니다.
         tvMessage.text = message ?: "Unexpected error."
         tvMessage.visibility = View.VISIBLE
     }
 
+    // 정적 필드로 정의되어 있던 항목은 동반 객체 내부에 정의됩니다.
     companion object {
 
         val KEY_USER_LOGIN = "user_login"

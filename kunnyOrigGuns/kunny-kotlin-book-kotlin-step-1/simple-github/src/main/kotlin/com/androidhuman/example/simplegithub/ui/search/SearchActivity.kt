@@ -24,6 +24,7 @@ import retrofit2.Response
 
 class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
 
+    // 프로퍼티에 lateinit을 추가합니다.
     internal lateinit var rvList: RecyclerView
 
     internal lateinit var progress: ProgressBar
@@ -50,6 +51,8 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
 
         adapter = SearchAdapter()
         adapter.setItemClickListener(this)
+
+        // rvList 객체에 연속으로 접근하고 있습니다.
         rvList.layoutManager = LinearLayoutManager(this)
         rvList.adapter = adapter
 
@@ -60,7 +63,10 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         menuInflater.inflate(R.menu.menu_activity_search, menu)
         menuSearch = menu.findItem(R.id.menu_activity_search_query)
 
+        // menuSearch.actionView를 SearchView로 캐스팅합니다.
         searchView = menuSearch.actionView as SearchView
+
+        // SearchView.OnQueryTextListener 인터페이스를 구현하는 익명 클래스의 인스턴스를 생성합니다.
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 updateTitle(query)
@@ -101,6 +107,8 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         showProgress()
 
         searchCall = api.searchRepository(query)
+
+        // Call 인터페이스를 구현하는 익명 클래스의 인스턴스를 생성합니다.
         searchCall.enqueue(object : Callback<RepoSearchResponse> {
             override fun onResponse(call: Call<RepoSearchResponse>,
                     response: Response<RepoSearchResponse>) {
@@ -121,12 +129,14 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
 
             override fun onFailure(call: Call<RepoSearchResponse>, t: Throwable) {
                 hideProgress()
+                // showError() 함수는 널 값을 허용하지 않으나 t.message는 널 값을 반환할 수 있습니다.
                 showError(t.message)
             }
         })
     }
 
     private fun updateTitle(query: String) {
+        // getSupportActionBar() 함수를 한 번만 호출하기 위해, 함수로부터 받은 값을 임시 변수에 저장합니다.
         val ab = supportActionBar
         if (null != ab) {
             ab.subtitle = query
@@ -156,6 +166,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     }
 
     private fun showError(message: String?) {
+        // message가 널 값인 경우 "Unexpected error." 메시지를 표시합니다.
         tvMessage.text = message ?: "Unexpected error."
         tvMessage.visibility = View.VISIBLE
     }

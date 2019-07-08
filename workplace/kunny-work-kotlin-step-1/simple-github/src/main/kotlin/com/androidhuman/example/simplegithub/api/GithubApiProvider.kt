@@ -27,6 +27,7 @@ fun provideGithubApi(context: Context): GithubApi
             .build()
             .create(GithubApi::class.java)
 
+// run() 함수로 OkHttpClient.Builder() 변수 선언을 제거합니다.
 private fun provideOkHttpClient(
         interceptor: HttpLoggingInterceptor,
         authInterceptor: AuthInterceptor?): OkHttpClient
@@ -53,12 +54,13 @@ private fun provideAuthTokenProvider(context: Context): AuthTokenProvider
 
 internal class AuthInterceptor(private val token: String) : Interceptor {
 
+    // with() 함수와 run() 함수로 추가 변수 선언을 제거합니다.
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response = with(chain) {
         val newRequest = request().newBuilder().run {
-            addHeader("Authorization", "token $token")
-            build()
-        }
+        addHeader("Authorization", "token $token")
+        build()
+    }
         proceed(newRequest)
     }
 
