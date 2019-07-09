@@ -14,6 +14,7 @@ buildscript {
 
 allprojects {
     repositories {
+        // 구글 메이븐 저장소가 추가되어 있는지 확인합니다.
         google()
         jcenter()
     }

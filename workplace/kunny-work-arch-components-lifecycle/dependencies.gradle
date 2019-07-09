@@ -10,12 +10,12 @@ ext {
 
     // Library
     ankoVersion = '0.10.3'
-    //[ By lifecycle
+    //[ By lifecycle  사용할 아키텍처 컴포넌트 버전을 추가합니다.
     archComponentVersion = '1.1.1'
     //]
     glideVersion = '4.1.1'
     gsonVersion = '2.7'
-    kotlinVersion = '1.3.40'
+    kotlinVersion = '1.3.41'
     okHttpVersion = '3.8.1'
     retrofitVersion = '2.3.0'
     //[ By RxJava  프로젝트에서 사용할 RxAndroid, RxJava 버전을 젇의합니다.
@@ -25,5 +25,7 @@ ext {
     //[ By RxJava-rxBinding
     rxBindingVersion = '2.0.0'
     //]
+    // By lifecycle
+    // Lifecycle을 사용하려면 26.1.0 버전 이상의 서포트 라이브러리를 사용해야 합니다.
     supportLibVersion = '28.0.0'
 }

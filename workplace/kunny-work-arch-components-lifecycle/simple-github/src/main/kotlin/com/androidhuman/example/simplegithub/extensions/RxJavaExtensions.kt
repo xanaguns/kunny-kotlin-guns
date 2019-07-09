@@ -9,7 +9,7 @@ operator fun CompositeDisposable.plusAssign(disposable: Disposable) {
     this.add(disposable)
 }
 // */
-//[ By lifecycle
+//[ By lifecycle  CompositeDisposable.plusAssign() 대신 아래 함수를 추가합니다.
 operator fun AutoClearedDisposable.plusAssign(disposable: Disposable)
         = this.add(disposable)
 //]

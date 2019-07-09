@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-    //[ By lifecycle
+    //[ By lifecycle  안드로이드 아키텍처 컴포넌트를 위한 의존성을 추가합니다.
     implementation "android.arch.lifecycle:extensions:$archComponentVersion"
     //]
     implementation "com.android.support:appcompat-v7:$supportLibVersion"
@@ -67,7 +67,7 @@ dependencies {
     implementation "org.jetbrains.anko:anko-commons:$ankoVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
-    //[ By lifecycle
+    //[ By lifecycle  안드로이드 아키텍처 컴포넌트를 위한 의존성을 추가합니다.
     kapt "android.arch.lifecycle:compiler:$archComponentVersion"
     //]
     // 코틀린 어노테이션 프로세서에서 처리될 수 있도록 의존성에 추가합니다.

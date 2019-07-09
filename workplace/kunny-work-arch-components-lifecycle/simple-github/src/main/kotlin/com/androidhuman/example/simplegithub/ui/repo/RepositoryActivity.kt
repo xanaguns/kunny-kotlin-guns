@@ -43,7 +43,7 @@ class RepositoryActivity : AppCompatActivity() {
     internal val disposables = CompositeDisposable()
     //]
     // */
-    //[ By lifecycle
+    //[ By lifecycle  CompositeDisposable에서 AutoClearedDisposable로 변경합니다.
     internal val disposables = AutoClearedDisposable(this)
     //]
 
@@ -57,7 +57,7 @@ class RepositoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_repository)
 
-        //[ By lifecycle
+        //[ By lifecycle  Lifecycle.addObserver() 함수를 사용하여 AutoClearedDisposable 객체를 옵서버로 등록합니다.
         lifecycle += disposables
         //]
 
@@ -74,7 +74,7 @@ class RepositoryActivity : AppCompatActivity() {
         showRepositoryInfo(login, repo)
     }
 
-    /* //By lifecycle
+    /* //By lifecycle  onStop() 함수는 더 이상 오버라이드하지 않아도 됩니다.
     override fun onStop() {
         super.onStop()
         /*

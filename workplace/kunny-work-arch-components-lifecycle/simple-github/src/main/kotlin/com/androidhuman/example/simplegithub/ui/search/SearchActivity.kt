@@ -53,7 +53,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     internal val disposables = CompositeDisposable()
     //]
     // */
-    //[ By lifecycle
+    //[ By lifecycle  CompositeDisposable에서 AutoClearedDisposable로 변경합니다.
     internal val disposables = AutoClearedDisposable(this)
     //]
 
@@ -63,7 +63,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     internal val viewDisposables = CompositeDisposable()
     //]
     // */
-    //[ By lifecycle
+    //[ By lifecycle  CompositeDisposable에서 AutoClearedDisposable로 변경합니다.
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
     // */
@@ -72,7 +72,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
-        //[ By lifecycle
+        //[ By lifecycle  Lifecycle.addObserver() 함수를 사용하여 각 AutoClearedDisposable 객체를 옵서버로 등록합니다.
         lifecycle += disposables
         lifecycle += viewDisposables
         //]
@@ -174,7 +174,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         return super.onOptionsItemSelected(item)
     }
 
-    /* //By lifecycle
+    /* //By lifecycle  onStop() 함수는 더 이상 오버라이드하지 않아도 됩니다.
     override fun onStop() {
         super.onStop()
         /*
