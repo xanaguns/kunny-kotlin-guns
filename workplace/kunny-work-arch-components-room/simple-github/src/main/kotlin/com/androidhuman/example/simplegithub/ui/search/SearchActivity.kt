@@ -11,8 +11,14 @@ import android.view.inputmethod.InputMethodManager
 import com.androidhuman.example.simplegithub.R
 import com.androidhuman.example.simplegithub.api.model.GithubRepo
 import com.androidhuman.example.simplegithub.api.provideGithubApi
+//[ By room
+import com.androidhuman.example.simplegithub.data.provideSearchHistoryDao
+//]
 // 연산자 오버로딩 함수를 import 문에 추가합니다.
 import com.androidhuman.example.simplegithub.extensions.plusAssign
+//[ By room
+import com.androidhuman.example.simplegithub.extensions.runOnIoScheduler
+//]
 //[ By lifecycle
 import com.androidhuman.example.simplegithub.rx.AutoClearedDisposable
 //]
@@ -41,6 +47,10 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     }
 
     internal val api by lazy { provideGithubApi(this) }
+
+    //[ By room
+    internal val searchHistoryDao by lazy { provideSearchHistoryDao(this) }
+    //]
 
     /*
     // 널 값을 허용하도록 한 후, 초기값을 명시적으로 null로 지정합니다.
@@ -198,6 +208,10 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     // */
 
     override fun onItemClick(repository: GithubRepo) {
+        //[ By room
+        disposables += runOnIoScheduler { searchHistoryDao.add(repository) }
+        //]
+
         // apply() 함수를 사용하여 객체 생성과 extra를 추가하는 작업을 동시에 수행합니다.
         //val intent = (Intent(this, RepositoryActivity::class.java)).apply {
         //    putExtra(RepositoryActivity.KEY_USER_LOGIN, repository.owner.login)
