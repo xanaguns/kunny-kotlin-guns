@@ -1,5 +1,8 @@
 package com.androidhuman.example.simplegithub.ui.search
 
+//[ By viewmodel
+import android.arch.lifecycle.ViewModelProviders
+//]
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -48,12 +51,14 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         SearchAdapter().apply { setItemClickListener(this@SearchActivity) }
     }
 
+    /*
     internal val api by lazy { provideGithubApi(this) }
 
     //[ By room
     // SearchHistoryDao의 인스턴스를 받아옵니다.
     internal val searchHistoryDao by lazy { provideSearchHistoryDao(this) }
     //]
+    // */
 
     /*
     // 널 값을 허용하도록 한 후, 초기값을 명시적으로 null로 지정합니다.
@@ -81,9 +86,24 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
     // */
 
+    //[ By viewmodel
+    internal val viewModelFactory by lazy {
+        SearchViewModelFactory(
+                provideGithubApi(this),
+                provideSearchHistoryDao(this))
+    }
+
+    lateinit var viewModel: SearchViewModel
+    //]
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
+
+        //[ By viewmodel
+        viewModel = ViewModelProviders.of(
+                this, viewModelFactory)[SearchViewModel::class.java]
+        //]
 
         //[ By lifecycle  Lifecycle.addObserver() 함수를 사용하여 각 AutoClearedDisposable 객체를 옵서버로 등록합니다.
         lifecycle += disposables
@@ -95,6 +115,41 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
             layoutManager = LinearLayoutManager(this@SearchActivity)
             adapter = this@SearchActivity.adapter
         }
+
+        //[ ++ By viewmodel
+        viewDisposables += viewModel.searchResult
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { items ->
+                    with(adapter) {
+                        if (items.isEmpty) {
+                            clearItems()
+                        } else {
+                            setItems(items.value)
+                        }
+                        notifyDataSetChanged()
+                    }
+                }
+
+        viewDisposables += viewModel.message
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { message ->
+                    if (message.isEmpty) {
+                        hideError()
+                    } else {
+                        showError(message.value)
+                    }
+                }
+
+        viewDisposables += viewModel.isLoading
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { isLoading ->
+                    if (isLoading) {
+                        showProgress()
+                    } else {
+                        hideProgress()
+                    }
+                }
+        //] -- By viewmodel
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -122,7 +177,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         }
         // */
 
-        //[ By RxJava-rxBinding
+        //[ ++ By RxJava-rxBinding
         searchView = (menuSearch.actionView as SearchView)
 
         // SearchView에서 발생하는 이벤트를 옵서버블 형태로 받습니다.
@@ -155,8 +210,9 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                     collapseSearchView()
                     searchRepository(query)
                 }
-        //]
+        //] -- By RxJava-rxBinding
 
+        /*
         // with() 함수를 사용하여 menuSearch 범위 내에서 작업을 수행합니다.
         with(menuSearch) {
             setOnActionExpandListener(object: MenuItem.OnActionExpandListener {
@@ -175,6 +231,19 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
 
             expandActionView()
         }
+        // */
+        //[ ++ By viewmodel
+        viewDisposables += viewModel.lastSearchKeyword
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { keyword ->
+                    if (keyword.isEmpty) {
+                        menuSearch.expandActionView()
+                    } else {
+                        updateTitle(keyword.value)
+                    }
+                }
+        //] -- By viewmodel
+
 
         return true
     }
@@ -211,6 +280,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     // */
 
     override fun onItemClick(repository: GithubRepo) {
+        /*
         //[ ++ By room
         /*
         // 데이터베이스에 저장소를 추가합니다.
@@ -225,14 +295,19 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         // runOnIoScheduler 함수로 IO 스케줄러에서 실행할 작업을 간단히 표현합니다.
         disposables += runOnIoScheduler { searchHistoryDao.add(repository) }
         //] -- By room
+        // */
+        //[ By viewmodel
+        disposables += viewModel.addToSearchHistory(repository)
+        //]
 
+        /*
         // apply() 함수를 사용하여 객체 생성과 extra를 추가하는 작업을 동시에 수행합니다.
-        //val intent = (Intent(this, RepositoryActivity::class.java)).apply {
-        //    putExtra(RepositoryActivity.KEY_USER_LOGIN, repository.owner.login)
-        //    putExtra(RepositoryActivity.KEY_REPO_NAME, repository.name)
-        //}
-        //startActivity(intent)
-
+        val intent = (Intent(this, RepositoryActivity::class.java)).apply {
+            putExtra(RepositoryActivity.KEY_USER_LOGIN, repository.owner.login)
+            putExtra(RepositoryActivity.KEY_REPO_NAME, repository.name)
+        }
+        startActivity(intent)
+        // */
         // 부가정보로 전달할 항목을 함수의 인자로 바로 넣어줍니다.
         startActivity<RepositoryActivity>(
                 RepositoryActivity.KEY_USER_LOGIN to repository.owner.login,
@@ -281,7 +356,8 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         })
         // */
 
-        //[ By RxJava
+        /*
+        //[ ++ By RxJava
         // REST API를 통해 검색 결과를 요청합니다.
         // '+=' 연산자로 디스포저블을 CompositeDisposable에 추가합니다.
         //disposables.add(api.searchRepository(query)
@@ -328,6 +404,10 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                     // 작업이 정상적으로 완료되지 않았을 때 호출됩니다.
                     showError(it.message)
                 }//)
+        //] -- By RxJava
+        // */
+        //[ By viewmodel
+        disposables += viewModel.searchRepository(query)
         //]
     }
 
@@ -347,6 +427,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         menuSearch.collapseActionView()
     }
 
+    /*
     private fun clearResults() {
         // with() 함수를 사용하여 adapter 범위 내에서 작업을 수행합니다.
         with(adapter) {
@@ -354,6 +435,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
             notifyDataSetChanged()
         }
     }
+    // */
 
     private fun showProgress() {
         pbActivitySearch.visibility = View.VISIBLE

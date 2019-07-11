@@ -1,5 +1,8 @@
 package com.androidhuman.example.simplegithub.ui.repo
 
+//[ By viewmodel
+import android.arch.lifecycle.ViewModelProviders
+//]
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
@@ -28,9 +31,11 @@ class RepositoryActivity : AppCompatActivity() {
         const val KEY_REPO_NAME = "repo_name"
     }
 
+    /*
     // 프로퍼티에 lateinit을 추가합니다.
     // lazy 프로퍼티로 전환합니다.
     internal val api by lazy { provideGithubApi(this) }
+    // */
 
     /*
     // 널 값을 허용하도록 한 후, 초기값을 명시적으로 null로 지정합니다.
@@ -47,6 +52,17 @@ class RepositoryActivity : AppCompatActivity() {
     internal val disposables = AutoClearedDisposable(this)
     //]
 
+    //[ ++ By viewmodel
+    internal val viewDisposables
+            = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
+
+    internal val viewModelFactory by lazy {
+        RepositoryViewModelFactory(provideGithubApi(this))
+    }
+
+    lateinit var viewModel: RepositoryViewModel
+    //] -- By viewmodel
+
     internal val dateFormatInResponse = SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ssX", Locale.getDefault())
 
@@ -57,9 +73,66 @@ class RepositoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_repository)
 
+        //[ By viewmodel
+        viewModel = ViewModelProviders.of(
+                this, viewModelFactory)[RepositoryViewModel::class.java]
+        //]
+
         //[ By lifecycle  Lifecycle.addObserver() 함수를 사용하여 AutoClearedDisposable 객체를 옵서버로 등록합니다.
         lifecycle += disposables
         //]
+        //[ ++ By viewmodel
+        lifecycle += viewDisposables
+
+        viewDisposables += viewModel.repository
+                .filter { !it.isEmpty }
+                .map { it.value }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { repository ->
+                    GlideApp.with(this@RepositoryActivity)
+                            .load(repository.owner.avatarUrl)
+                            .into(ivActivityRepositoryProfile)
+
+                    tvActivityRepositoryName.text = repository.fullName
+                    tvActivityRepositoryStars.text = resources
+                            .getQuantityString(R.plurals.star, repository.stars, repository.stars)
+                    if (null == repository.description) {
+                        tvActivityRepositoryDescription.setText(R.string.no_description_provided)
+                    } else {
+                        tvActivityRepositoryDescription.text = repository.description
+                    }
+                    if (null == repository.language) {
+                        tvActivityRepositoryLanguage.setText(R.string.no_language_specified)
+                    } else {
+                        tvActivityRepositoryLanguage.text = repository.language
+                    }
+
+                    try {
+                        val lastUpdate = dateFormatInResponse.parse(repository.updatedAt)
+                        tvActivityRepositoryLastUpdate.text = dateFormatToShow.format(lastUpdate)
+                    } catch (e: ParseException) {
+                        tvActivityRepositoryLastUpdate.text = getString(R.string.unknown)
+                    }
+                }
+
+        viewDisposables += viewModel.message
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { message -> showError(message) }
+
+        viewDisposables += viewModel.isContentVisible
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { visible -> setContentVisibility(visible) }
+
+        viewDisposables += viewModel.isLoading
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { isLoading ->
+                    if (isLoading) {
+                        showProgress()
+                    } else {
+                        hideProgress()
+                    }
+                }
+        //] -- By viewmodel
 
         // 엘비스 연산자를 사용하여 널 값을 검사합니다.
         // KEY_USER_LOGIN 이름으로 문자열 값 포함되어 있지 않다면 IllegalArgumentException 예외를 발생시킵니다.
@@ -71,7 +144,12 @@ class RepositoryActivity : AppCompatActivity() {
         val repo = intent.getStringExtra(KEY_REPO_NAME)
                 ?: throw IllegalArgumentException("No repo info exists in extras")
 
+        /*
         showRepositoryInfo(login, repo)
+        // */
+        //[ By viewmodel
+        disposables += viewModel.requestRepositoryInfo(login, repo)
+        //]
     }
 
     /* //By lifecycle  onStop() 함수는 더 이상 오버라이드하지 않아도 됩니다.
@@ -89,6 +167,7 @@ class RepositoryActivity : AppCompatActivity() {
     }
     // */
 
+    /*
     private fun showRepositoryInfo(login: String, repoName: String) {
         /*
         showProgress()
@@ -199,17 +278,29 @@ class RepositoryActivity : AppCompatActivity() {
                 }//)
         //]
     }
+    // */
 
     private fun showProgress() {
+        /*
         llActivityRepositoryContent.visibility = View.GONE
+        // */
         pbActivityRepository.visibility = View.VISIBLE
     }
 
-    private fun hideProgress(isSucceed: Boolean) {
+    private fun hideProgress(/*isSucceed: Boolean*/) {
+        /*
         llActivityRepositoryContent.visibility = if (isSucceed) View.VISIBLE else View.GONE
+        // */
         pbActivityRepository.visibility = View.GONE
     }
 
+    //[ By viewmodel
+    private fun setContentVisibility(show: Boolean) {
+        llActivityRepositoryContent.visibility = if (show) View.VISIBLE else View.GONE
+    }
+    //]
+
+    /*
     private fun showError(message: String?) {
         // with() 함수를 사용하여 tvActivityRepositoryMessage 범위 내에서 작업을 수행합니다.
         with(tvActivityRepositoryMessage) {
@@ -217,4 +308,13 @@ class RepositoryActivity : AppCompatActivity() {
             visibility = View.VISIBLE
         }
     }
+    // */
+    //[ By viewmodel
+    private fun showError(message: String) {
+        with(tvActivityRepositoryMessage) {
+            text = message
+            visibility = View.VISIBLE
+        }
+    }
+    //]
 }

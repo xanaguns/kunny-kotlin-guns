@@ -1,5 +1,8 @@
 package com.androidhuman.example.simplegithub.ui.main
 
+//[ By viewmodel
+import android.arch.lifecycle.ViewModelProviders
+//]
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -33,19 +36,56 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         SearchAdapter().apply { setItemClickListener(this@MainActivity) }
     }
 
+    /*
     // 최근 조회한 저장소를 담당하는 데이터 접근 객체 프로퍼티를 추가합니다.
     internal val searchHistoryDao by lazy { provideSearchHistoryDao(this) }
+    // */
 
     // 디스포저블을 관리하는 프로퍼티를 추가합니다.
     internal val disposables = AutoClearedDisposable(this)
+
+    //[ By viewmodel
+    internal val viewDisposables
+            = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
+
+    internal val viewModelFactory
+            by lazy { MainViewModelFactory(provideSearchHistoryDao(this)) }
+
+    lateinit var viewModel: MainViewModel
+    //]
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        //[ By viewmodel
+        viewModel = ViewModelProviders.of(
+                this, viewModelFactory)[MainViewModel::class.java]
+        //]
+
         // 생명주기 이벤트 옵서버를 등록합니다.
         lifecycle += disposables
+        //[ ++ By viewmodel
+        lifecycle += viewDisposables
+        lifecycle += AutoActivatedDisposable(this) {
+            viewModel.searchHistory
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { items ->
+                        with(adapter) {
+                            if (items.isEmpty) {
+                                clearItems()
+                            } else {
+                                setItems(items.value)
+                            }
+                            notifyDataSetChanged()
+                        }
+                    }
+        }
+        //] -- By viewmodel
+        /*
         lifecycle += AutoActivatedDisposable(this) { fetchSearchHistory() }
+        // */
         /*
         lifecycle += object : LifecycleObserver {
             // onStart() 콜백 함수가 호출되면 fetchSearchHistory() 함수를 호출합니다.
@@ -68,6 +108,18 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = this@MainActivity.adapter
         }
+
+        //[ By viewmodel
+        viewDisposables += viewModel.message
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { message ->
+                    if (message.isEmpty) {
+                        hideMessage()
+                    } else {
+                        showMessage(message.value)
+                    }
+                }
+        //]
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -78,7 +130,12 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // 'Clear all' 메뉴를 선택하면 조회해던 저장소 기록을 모두 삭제합니다.
         if (R.id.menu_activity_main_clear_all == item.itemId) {
+            //[ By viewmodel
+            disposables += viewModel.clearSearchHistory()
+            //]
+            /*
             clearAll()
+            // */
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -90,6 +147,7 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                 RepositoryActivity.KEY_REPO_NAME to repository.name)
     }
 
+    /*
     // 데이터베이스에 저장되어 잇는 저장소 목록을 불러오는 작업을 반환합니다.
     // searchHistoryDao.getHistory() 함수는 Flowable 형태로 데이터를 반환하므로,
     // 데이터베이스에 저장된 자료가 바뀌면 즉시 업데이트된 정보가 새로 전달됩니다.
@@ -126,13 +184,24 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         // 앞에서 작성한 runOnIoScheduler() 함수를 사용하여 IO 스레드에서 작업을 실행합니다.
         disposables += runOnIoScheduler { searchHistoryDao.clearAll() }
     }
+    // */
 
+    /*
     private fun showMessage(message: String?) {
         with(tvActivityMainMessage) {
             text = message ?: "Unexpected error."
             visibility = View.VISIBLE
         }
     }
+    // */
+    //[ By viewmodel
+    private fun showMessage(message: String) {
+        with(tvActivityMainMessage) {
+            text = message
+            visibility = View.VISIBLE
+        }
+    }
+    //]
 
     private fun hideMessage() {
         with(tvActivityMainMessage) {

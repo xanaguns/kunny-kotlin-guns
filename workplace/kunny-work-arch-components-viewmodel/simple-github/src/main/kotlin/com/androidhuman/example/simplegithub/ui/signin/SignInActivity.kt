@@ -1,5 +1,8 @@
 package com.androidhuman.example.simplegithub.ui.signin
 
+//[ By viewmodel
+import android.arch.lifecycle.ViewModelProviders
+//]
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -32,12 +35,14 @@ class SignInActivity : AppCompatActivity() {
         const val TAG = "SignInActivity"
     }
 
+    /*
     // 프로퍼티에 lateinit을 추가합니다.
     // Lazy 프로퍼티를 사용하기 위해 변수(var)에서 값(val)로 바꾼 후 사용합니다.
     // 타입 선언을 생략합니다.
     internal val api by lazy { provideAuthApi() }
 
     internal val authTokenProvider by lazy { AuthTokenProvider(this) }
+    // */
 
     /*
     // 널 값을 허용하도록 한 후, 초기값을 명시적으로 null로 지정합니다.
@@ -54,13 +59,32 @@ class SignInActivity : AppCompatActivity() {
     internal val disposables = AutoClearedDisposable(this)
     //]
 
+    //[ By viewmodel
+    internal val viewDisposables
+            = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
+
+    internal val viewModelFactory by lazy {
+        SignInViewModelFactory(provideAuthApi(), AuthTokenProvider(this))
+    }
+
+    lateinit var viewModel: SignInViewModel
+    //]
+
     override fun onCreate(savedInstanceState: Bundle?) {
         LogMsg.w(TAG, "onCreate()")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in)
 
+        //[ By viewmodel
+        viewModel = ViewModelProviders.of(
+                this, viewModelFactory)[SignInViewModel::class.java]
+        //]
+
         //[ By lifecycle  Lifecycle.addObserver() 함수를 사용하여 AutoClearedDisposable 객체를 옵서버로 등록합니다.
         lifecycle += disposables
+        //]
+        //[ By viewmodel
+        lifecycle += viewDisposables
         //]
 
         // View.onClickListener의 본체를 람다 표현식으로 작성합니다.
@@ -79,10 +103,34 @@ class SignInActivity : AppCompatActivity() {
             intent.launchUrl(this@SignInActivity, authUri)
         }
 
+        /*
         // 저장된 액세스 토큰이 있다면 메인 액티비티로 이동합니다.
         if (null != authTokenProvider.token) {
             launchMainActivity()
         }
+        // */
+        //[ ++ By viewmodel
+        viewDisposables += viewModel.accessToken
+                .filter { !it.isEmpty }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { launchMainActivity() }
+
+        viewDisposables += viewModel.message
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { message -> showError(message) }
+
+        viewDisposables += viewModel.isLoading
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { isLoading ->
+                    if (isLoading) {
+                        showProgress()
+                    } else {
+                        hideProgress()
+                    }
+                }
+
+        disposables += viewModel.loadAccessToken()
+        //] -- By viewmodel
     }
 
     override fun onDestroy() {
@@ -160,6 +208,7 @@ class SignInActivity : AppCompatActivity() {
         })
         // */
 
+        /*
         //[ By RxJava
         // REST API를 통해 액세스 토큰을 요청합니다.
         // '+=' 연산자로 디스포저블을 CompositeDisposable에 추가합니다.
@@ -193,6 +242,12 @@ class SignInActivity : AppCompatActivity() {
                     showError(it)
                 }//)
         //]
+        // */
+
+        //[ By viewmodel
+        disposables += viewModel.requestAccessToken(
+                BuildConfig.GITHUB_CLIENT_ID, BuildConfig.GITHUB_CLIENT_SECRET, code)
+        //]
     }
 
     private fun showProgress() {
@@ -205,10 +260,17 @@ class SignInActivity : AppCompatActivity() {
         pbActivitySignIn.visibility = View.GONE
     }
 
+    /*
     private fun showError(throwable: Throwable) {
         //Toast.makeText(this, throwable.message, Toast.LENGTH_LONG).show()
         longToast(throwable.message ?: "No message available")
     }
+    // */
+    //[ By viewmodel
+    private fun showError(message: String) {
+        longToast(message)
+    }
+    //]
 
     private fun launchMainActivity() {
         //startActivity(Intent(
