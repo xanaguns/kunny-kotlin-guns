@@ -18,5 +18,7 @@ operator fun AutoClearedDisposable.plusAssign(disposable: Disposable)
 
 //[ By room
 fun runOnIoScheduler(func: () -> Unit): Disposable
-        = Completable.fromCallable(func).subscribeOn(Schedulers.io()).subscribe()
+        = Completable.fromCallable(func)
+        .subscribeOn(Schedulers.io())
+        .subscribe()
 //]

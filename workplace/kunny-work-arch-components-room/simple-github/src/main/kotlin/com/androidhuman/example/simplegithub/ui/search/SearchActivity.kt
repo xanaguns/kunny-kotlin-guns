@@ -26,10 +26,12 @@ import com.androidhuman.example.simplegithub.ui.repo.RepositoryActivity
 //[ By RxJava-rxBinding
 import com.jakewharton.rxbinding2.support.v7.widget.RxSearchView
 import com.jakewharton.rxbinding2.support.v7.widget.queryTextChangeEvents
+import io.reactivex.Completable
 //]
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_search.*
 // import 문에 startActivity 함수를 추가합니다.
 import org.jetbrains.anko.startActivity
@@ -49,6 +51,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     internal val api by lazy { provideGithubApi(this) }
 
     //[ By room
+    // SearchHistoryDao의 인스턴스를 받아옵니다.
     internal val searchHistoryDao by lazy { provideSearchHistoryDao(this) }
     //]
 
@@ -208,9 +211,20 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     // */
 
     override fun onItemClick(repository: GithubRepo) {
-        //[ By room
+        //[ ++ By room
+        /*
+        // 데이터베이스에 저장소를 추가합니다.
+        // 데이터 조작 코드를 메인 스레드에서 호출하면 에러가 발생하므로,
+        // RxJava의 Completable을 사용하여
+        // IO 스레드에서 데이터 추가 작업을 수행하도록 합니다.
+        disposables += Completable
+                .fromCallable{ searchHistoryDao.add(repository) }
+                .subscribeOn(Schedulers.io())
+                .subscribe()
+        // */
+        // runOnIoScheduler 함수로 IO 스케줄러에서 실행할 작업을 간단히 표현합니다.
         disposables += runOnIoScheduler { searchHistoryDao.add(repository) }
-        //]
+        //] -- By room
 
         // apply() 함수를 사용하여 객체 생성과 extra를 추가하는 작업을 동시에 수행합니다.
         //val intent = (Intent(this, RepositoryActivity::class.java)).apply {
