@@ -81,18 +81,22 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     internal val viewDisposables = CompositeDisposable()
     //]
     // */
-    //[ By lifecycle  CompositeDisposable에서 AutoClearedDisposable로 변경합니다.
+    //[ By lifecycle
+    // CompositeDisposable에서 AutoClearedDisposable로 변경합니다.
+    // 액티비티가 완전히 종료되기 전까지 이벤트를 계속 받기 위해 추가합니다.
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
     // */
 
     //[ By viewmodel
+    // SearchViewModel를 생성할 때 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
         SearchViewModelFactory(
                 provideGithubApi(this),
                 provideSearchHistoryDao(this))
     }
 
+    // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: SearchViewModel
     //]
 
@@ -101,12 +105,15 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         setContentView(R.layout.activity_search)
 
         //[ By viewmodel
+        // SearchViewModel의 인스턴스를 받습니다.
         viewModel = ViewModelProviders.of(
                 this, viewModelFactory)[SearchViewModel::class.java]
         //]
 
         //[ By lifecycle  Lifecycle.addObserver() 함수를 사용하여 각 AutoClearedDisposable 객체를 옵서버로 등록합니다.
         lifecycle += disposables
+
+        // viewDisposables에서 이 액티비티의 생명주기 이벤트를 받도록 합니다.
         lifecycle += viewDisposables
         //]
 
@@ -117,6 +124,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         }
 
         //[ ++ By viewmodel
+        // 검색 결과 이벤트를 구독합니다.
         viewDisposables += viewModel.searchResult
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { items ->
@@ -130,6 +138,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                     }
                 }
 
+        // 메시지 이벤트를 구독합니다.
         viewDisposables += viewModel.message
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { message ->
@@ -140,9 +149,12 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                     }
                 }
 
+
+        // 작업 진행 여부 이벤트를 구독합니다.
         viewDisposables += viewModel.isLoading
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { isLoading ->
+                    // 작업 진행 여부 이벤트에 따라 프로그레스바의 표시 상태를 변경합니다.
                     if (isLoading) {
                         showProgress()
                     } else {
@@ -233,12 +245,15 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         }
         // */
         //[ ++ By viewmodel
+        // 마지막으로 검색한 검색어 이벤트를 구독합니다.
         viewDisposables += viewModel.lastSearchKeyword
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { keyword ->
                     if (keyword.isEmpty) {
+                        // 아직 검색을 수행하지 않은 경우 SearchView를 펼친 상태로 유지합니다.
                         menuSearch.expandActionView()
                     } else {
+                        // 검색어가 있는 경우 해당 검색어를 액티비티의 제목으로 표시합니다.
                         updateTitle(keyword.value)
                     }
                 }
@@ -297,6 +312,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         //] -- By room
         // */
         //[ By viewmodel
+        // 선택한 저장소 정보를 데이터베이스에 추가합니다.
         disposables += viewModel.addToSearchHistory(repository)
         //]
 
@@ -407,6 +423,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         //] -- By RxJava
         // */
         //[ By viewmodel
+        // 전달받은 검색어로 검색 결과를 요청합니다.
         disposables += viewModel.searchRepository(query)
         //]
     }

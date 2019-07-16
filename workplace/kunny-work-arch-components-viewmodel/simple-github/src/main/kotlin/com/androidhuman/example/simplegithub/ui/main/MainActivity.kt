@@ -44,21 +44,25 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     // 디스포저블을 관리하는 프로퍼티를 추가합니다.
     internal val disposables = AutoClearedDisposable(this)
 
-    //[ By viewmodel
+    //[ ++ By viewmodel
+    // 액티비티가 완전히 종료되기 전까지 이벤트를 계속 받기 위해 추가합니다.
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
 
+    // MainViewModel을 생성하기 위해 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory
             by lazy { MainViewModelFactory(provideSearchHistoryDao(this)) }
 
+    // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: MainViewModel
-    //]
+    //] -- By viewmodel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         //[ By viewmodel
+        // MainViewModel의 인스턴스를 받습니다.
         viewModel = ViewModelProviders.of(
                 this, viewModelFactory)[MainViewModel::class.java]
         //]
@@ -66,7 +70,11 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         // 생명주기 이벤트 옵서버를 등록합니다.
         lifecycle += disposables
         //[ ++ By viewmodel
+        // viewDisposables에서 이 액티비티의 생명주기 이벤트를 받도록 합니다.
         lifecycle += viewDisposables
+
+        // 액티비티가 활성 상태일 때만
+        // 데이터베이스에 저장된 저장소 조회 기록을 받도록 합니다.
         lifecycle += AutoActivatedDisposable(this) {
             viewModel.searchHistory
                     .subscribeOn(Schedulers.io())
@@ -110,12 +118,15 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         }
 
         //[ By viewmodel
+        // 메시지 이벤트를 구독합니다.
         viewDisposables += viewModel.message
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { message ->
                     if (message.isEmpty) {
+                        // 빈 메시지를 받은 경우 표시되고 있는 메시지를 화면에서 숨깁니다.
                         hideMessage()
                     } else {
+                        // 유효한 메시지를 받은 경우 화면에 메시지를 표시합니다.
                         showMessage(message.value)
                     }
                 }
@@ -131,6 +142,7 @@ class MainActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         // 'Clear all' 메뉴를 선택하면 조회해던 저장소 기록을 모두 삭제합니다.
         if (R.id.menu_activity_main_clear_all == item.itemId) {
             //[ By viewmodel
+            // 데이터베이스에 저장된 저장소 조회 기록 데이터를 모두 삭제합니다.
             disposables += viewModel.clearSearchHistory()
             //]
             /*

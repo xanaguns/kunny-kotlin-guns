@@ -59,16 +59,19 @@ class SignInActivity : AppCompatActivity() {
     internal val disposables = AutoClearedDisposable(this)
     //]
 
-    //[ By viewmodel
+    //[ ++ By viewmodel
+    // 액티비티가 완전히 종료되기 전까지 이벤트를 계속 받기 위해 추가합니다.
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
 
+    // SignInViewModel을 생성할 때 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
         SignInViewModelFactory(provideAuthApi(), AuthTokenProvider(this))
     }
 
+    // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: SignInViewModel
-    //]
+    //] -- By viewmodel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogMsg.w(TAG, "onCreate()")
@@ -76,6 +79,7 @@ class SignInActivity : AppCompatActivity() {
         setContentView(R.layout.activity_sign_in)
 
         //[ By viewmodel
+        // SignInViewModel의 인스턴스를 받습니다.
         viewModel = ViewModelProviders.of(
                 this, viewModelFactory)[SignInViewModel::class.java]
         //]
@@ -84,6 +88,7 @@ class SignInActivity : AppCompatActivity() {
         lifecycle += disposables
         //]
         //[ By viewmodel
+        // viewDisposables에서 이 액티비티의 생명주기 이벤트를 받도록 합니다.
         lifecycle += viewDisposables
         //]
 
@@ -110,18 +115,24 @@ class SignInActivity : AppCompatActivity() {
         }
         // */
         //[ ++ By viewmodel
+        // 액세스 토큰 이벤트를 구독합니다.
         viewDisposables += viewModel.accessToken
+                // 액세스 토큰이 없는 경우는 무시합니다.
                 .filter { !it.isEmpty }
                 .observeOn(AndroidSchedulers.mainThread())
+                // 액세스 토큰이 있는 것을 확인했다면 메인 화면으로 이동합니다.
                 .subscribe { launchMainActivity() }
 
+        // 에러 메시지 이벤트를 구독합니다.
         viewDisposables += viewModel.message
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { message -> showError(message) }
 
+        // 작업 진행 여부 이벤트를 구독합니다.
         viewDisposables += viewModel.isLoading
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { isLoading ->
+                    // 작업 진행 여부 이벤트에 따라 프로그레스바의 표시 상태를 변경합니다.
                     if (isLoading) {
                         showProgress()
                     } else {
@@ -129,6 +140,7 @@ class SignInActivity : AppCompatActivity() {
                     }
                 }
 
+        // 기기에 저장되어 잇는 엑세스 토큰을 불러옵니다.
         disposables += viewModel.loadAccessToken()
         //] -- By viewmodel
     }
@@ -245,6 +257,7 @@ class SignInActivity : AppCompatActivity() {
         // */
 
         //[ By viewmodel
+        // ViewModel에 정의된 함수를 사용하여 새로운 액세스 토큰을 요청합니다.
         disposables += viewModel.requestAccessToken(
                 BuildConfig.GITHUB_CLIENT_ID, BuildConfig.GITHUB_CLIENT_SECRET, code)
         //]

@@ -53,13 +53,16 @@ class RepositoryActivity : AppCompatActivity() {
     //]
 
     //[ ++ By viewmodel
+    // 액티비티가 완전히 종료되기 전까지 이벤트를 계속 받기 위해 추가합니다.
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
 
+    // RepositoryViewModel을 생성하기 위해 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
         RepositoryViewModelFactory(provideGithubApi(this))
     }
 
+    // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: RepositoryViewModel
     //] -- By viewmodel
 
@@ -74,6 +77,7 @@ class RepositoryActivity : AppCompatActivity() {
         setContentView(R.layout.activity_repository)
 
         //[ By viewmodel
+        // RepositoryViewModel의 인스턴스를 받습니다.
         viewModel = ViewModelProviders.of(
                 this, viewModelFactory)[RepositoryViewModel::class.java]
         //]
@@ -82,9 +86,12 @@ class RepositoryActivity : AppCompatActivity() {
         lifecycle += disposables
         //]
         //[ ++ By viewmodel
+        // viewDisposables에서 이 액티비티의 생명주기 이벤트를 받도록 합니다.
         lifecycle += viewDisposables
 
+        // 저장소 정보 이벤트를 구독합니다.
         viewDisposables += viewModel.repository
+                // 유효한 저장소 이벤트만 받도록 합니다.
                 .filter { !it.isEmpty }
                 .map { it.value }
                 .observeOn(AndroidSchedulers.mainThread())
@@ -115,17 +122,23 @@ class RepositoryActivity : AppCompatActivity() {
                     }
                 }
 
+        // 메시지 이벤트를 구독합니다.
         viewDisposables += viewModel.message
                 .observeOn(AndroidSchedulers.mainThread())
+
+                // 메시지를 이벤트를 받으면 화면에 해당 메시지를 표시합니다.
                 .subscribe { message -> showError(message) }
 
+        // 저장소 정보를 보여주는 뷰의 표시 유무를 결정하는 이벤트를 구독합니다.
         viewDisposables += viewModel.isContentVisible
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { visible -> setContentVisibility(visible) }
 
+        // 작업 진행 여부 이벤트를 구독합니다.
         viewDisposables += viewModel.isLoading
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { isLoading ->
+                    // 작업 진행 여부 이벤트에 따라 프로그레스바의 표시 상태를 변경합니다.
                     if (isLoading) {
                         showProgress()
                     } else {
@@ -148,6 +161,7 @@ class RepositoryActivity : AppCompatActivity() {
         showRepositoryInfo(login, repo)
         // */
         //[ By viewmodel
+        // 저장소 정보를 요청합니다.
         disposables += viewModel.requestRepositoryInfo(login, repo)
         //]
     }
