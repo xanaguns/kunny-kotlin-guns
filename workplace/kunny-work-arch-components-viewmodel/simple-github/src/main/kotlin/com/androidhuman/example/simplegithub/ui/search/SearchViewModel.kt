@@ -5,6 +5,7 @@ import com.androidhuman.example.simplegithub.api.GithubApi
 import com.androidhuman.example.simplegithub.api.model.GithubRepo
 import com.androidhuman.example.simplegithub.data.SearchHistoryDao
 import com.androidhuman.example.simplegithub.extensions.runOnIoScheduler
+import com.androidhuman.example.simplegithub.util.LogMsg
 import com.androidhuman.example.simplegithub.util.SupportOptional
 import com.androidhuman.example.simplegithub.util.emptyOptional
 import com.androidhuman.example.simplegithub.util.optionalOf
@@ -18,6 +19,10 @@ class SearchViewModel(
         val api: GithubApi,
         val searchHistoryDao: SearchHistoryDao)
     : ViewModel() {
+
+    companion object {
+        const val TAG = "SearchViewModel"
+    }
 
     // 검색 결과를 전달할 서브젝트입니다. 초기값으로 빈 값을 지정합니다.
     val searchResult: BehaviorSubject<SupportOptional<List<GithubRepo>>>
@@ -39,7 +44,9 @@ class SearchViewModel(
             = api.searchRepository(query)
 
             // 검색어를 lastSearchKeyword 서브젝트에 전달합니다.
-            .doOnNext { lastSearchKeyword.onNext(optionalOf(query)) }
+            .doOnNext {
+                LogMsg.d(TAG, "doOnNext()  $query")
+                lastSearchKeyword.onNext(optionalOf(query)) }
             .flatMap {
                 if (0 == it.totalCount) {
                     Observable.error(IllegalStateException("No search result"))

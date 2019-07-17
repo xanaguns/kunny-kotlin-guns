@@ -26,6 +26,7 @@ import com.androidhuman.example.simplegithub.extensions.runOnIoScheduler
 import com.androidhuman.example.simplegithub.rx.AutoClearedDisposable
 //]
 import com.androidhuman.example.simplegithub.ui.repo.RepositoryActivity
+import com.androidhuman.example.simplegithub.util.LogMsg
 //[ By RxJava-rxBinding
 import com.jakewharton.rxbinding2.support.v7.widget.RxSearchView
 import com.jakewharton.rxbinding2.support.v7.widget.queryTextChangeEvents
@@ -40,6 +41,11 @@ import kotlinx.android.synthetic.main.activity_search.*
 import org.jetbrains.anko.startActivity
 
 class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
+
+    companion object {
+        const val TAG = "SearchActivity"
+    }
+
     // 프로퍼티에 lateinit을 추가합니다.
     internal lateinit var menuSearch: MenuItem
 
@@ -101,6 +107,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     //]
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        LogMsg.w(TAG, "onCreate()  savedInstanceState: $savedInstanceState");
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
@@ -129,9 +136,12 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { items ->
                     with(adapter) {
+                        LogMsg.d(TAG, "subscribe()  items.isEmpty: ${items.isEmpty}")
                         if (items.isEmpty) {
+                            LogMsg.v(TAG, "clearItems()")
                             clearItems()
                         } else {
+                            LogMsg.v(TAG, "setItems()")
                             setItems(items.value)
                         }
                         notifyDataSetChanged()
@@ -164,7 +174,33 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         //] -- By viewmodel
     }
 
+    override fun onDestroy() {
+        LogMsg.w(TAG, "onDestroy()")
+        super.onDestroy()
+    }
+
+    override fun onStart() {
+        LogMsg.w(TAG, "onStart()")
+        super.onStart()
+    }
+
+    override fun onStop() {
+        LogMsg.w(TAG, "onStop()")
+        super.onStop()
+    }
+
+    override fun onResume() {
+        LogMsg.w(TAG, "onResume()")
+        super.onResume()
+    }
+
+    override fun onPause() {
+        LogMsg.w(TAG, "onPause()")
+        super.onPause()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        LogMsg.w(TAG, "onCreateOptionsMenu()")
         menuInflater.inflate(R.menu.menu_activity_search, menu)
         menuSearch = menu.findItem(R.id.menu_activity_search_query)
 
