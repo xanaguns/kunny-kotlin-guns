@@ -34,11 +34,13 @@ import javax.inject.Inject
 // SearchAdapter.ItemClickListener 인터페이스를 구현합니다.
 class MainActivity : DaggerAppCompatActivity(), SearchAdapter.ItemClickListener {
 
+    /*
     // 어댑터 프로퍼티를 추가합니다.
     internal val adapter by lazy {
         // apply() 함수를 사용하여 객체 생성과 함수 호출을 한번에 수행합니다.
         SearchAdapter().apply { setItemClickListener(this@MainActivity) }
     }
+    // */
 
     /*
     // 최근 조회한 저장소를 담당하는 데이터 접근 객체 프로퍼티를 추가합니다.
@@ -53,6 +55,7 @@ class MainActivity : DaggerAppCompatActivity(), SearchAdapter.ItemClickListener 
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
 
+    /*
     // MainViewModel을 생성하기 위해 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
         //MainViewModelFactory(provideSearchHistoryDao(this))
@@ -61,16 +64,26 @@ class MainActivity : DaggerAppCompatActivity(), SearchAdapter.ItemClickListener 
         MainViewModelFactory(searchHistoryDao)
         //]
     }
+    // */
+    //[ ++ By dagger_2
+    // 대거로부터 SearchAdapter 객체를 주입받습니다.
+    @Inject lateinit var adapter: SearchAdapter
+
+    // 대거로부터 MainViewModelFactory 객체를 주입받습니다.
+    @Inject lateinit var viewModelFactory: MainViewModelFactory
+    //] -- By dagger_2
 
     // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: MainViewModel
     //] -- By viewmodel
 
+    /*
     //[ By dagger_1
     // 대거를 통해 SearchHistoryDao 객체를 주입받는 프로퍼티를 선언합니다.
     @Inject
     lateinit var searchHistoryDao: SearchHistoryDao
     //]
+    // */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

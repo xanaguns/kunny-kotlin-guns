@@ -68,6 +68,7 @@ class SignInActivity : DaggerAppCompatActivity() {
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
 
+    /*
     // SignInViewModel을 생성할 때 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
         //SignInViewModelFactory(provideAuthApi(), AuthTokenProvider(this))
@@ -76,11 +77,18 @@ class SignInActivity : DaggerAppCompatActivity() {
         SignInViewModelFactory(authApi, authTokenProvider)
         //]
     }
+    // */
+    //[ ++ By dagger_2
+    // AuthApi와 AuthTokenProvider를 주입받아 액티비티에서 객체를 생성하는 대신,
+    // 대거에서 SignInViewModelFactory 객체를 직접 주입받습니다.
+    @Inject lateinit var viewModelFactory: SignInViewModelFactory
+    //] -- By dagger_2
 
     // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: SignInViewModel
     //] -- By viewmodel
 
+    /*
     //[ ++ By dagger_1
     // 대거를 통해 AuthApi 객체를 주입받는 프로퍼티를 선언합니다.
     // @Inject 어노테이션을 추가해야 대거로부터 객체를 주입받을 수 있습니다.
@@ -92,6 +100,7 @@ class SignInActivity : DaggerAppCompatActivity() {
     @Inject
     lateinit var authTokenProvider: AuthTokenProvider
     //] -- By dagger_1
+    // */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogMsg.w(TAG, "onCreate()")

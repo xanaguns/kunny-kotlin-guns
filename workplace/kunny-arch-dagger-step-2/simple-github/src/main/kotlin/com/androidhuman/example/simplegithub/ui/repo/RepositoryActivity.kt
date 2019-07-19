@@ -61,6 +61,7 @@ class RepositoryActivity : DaggerAppCompatActivity() {
     internal val viewDisposables
             = AutoClearedDisposable(lifecycleOwner = this, alwaysClearOnStop = false)
 
+    /*
     // RepositoryViewModel을 생성하기 위해 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
         //RepositoryViewModelFactory(provideGithubApi(this))
@@ -69,16 +70,23 @@ class RepositoryActivity : DaggerAppCompatActivity() {
         RepositoryViewModelFactory(githubApi)
         //]
     }
+    // */
+    //[ ++ By dagger_2
+    // 대거로부터 RepositoryViewModelFactory 객체를 주입받습니다.
+    @Inject lateinit var viewModelFactory: RepositoryViewModelFactory
+    //] -- By dagger_2
 
     // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: RepositoryViewModel
     //] -- By viewmodel
 
+    /*
     //[ By dagger_1
     // 대거를 통해 GithubApi 객체를 주입받는 프로퍼티를 선언합니다.
     @Inject
     lateinit var githubApi: GithubApi
     //]
+    // */
 
     internal val dateFormatInResponse = SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ssX", Locale.getDefault())
