@@ -6,7 +6,7 @@ ext {
     targetSdkVersion = 28
 
     // Gradle plugin
-    androidPluginVersion = '3.4.1'
+    androidPluginVersion = '3.4.2'
 
     // Library
     ankoVersion = '0.10.3'

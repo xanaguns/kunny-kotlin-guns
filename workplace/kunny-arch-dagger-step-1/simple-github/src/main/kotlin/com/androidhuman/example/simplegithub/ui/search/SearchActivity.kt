@@ -12,10 +12,12 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.androidhuman.example.simplegithub.R
+import com.androidhuman.example.simplegithub.api.GithubApi
 import com.androidhuman.example.simplegithub.api.model.GithubRepo
-import com.androidhuman.example.simplegithub.api.provideGithubApi
+//import com.androidhuman.example.simplegithub.api.provideGithubApi
+import com.androidhuman.example.simplegithub.data.SearchHistoryDao
 //[ By room
-import com.androidhuman.example.simplegithub.data.provideSearchHistoryDao
+//import com.androidhuman.example.simplegithub.data.provideSearchHistoryDao
 //]
 // 연산자 오버로딩 함수를 import 문에 추가합니다.
 import com.androidhuman.example.simplegithub.extensions.plusAssign
@@ -30,6 +32,7 @@ import com.androidhuman.example.simplegithub.util.LogMsg
 //[ By RxJava-rxBinding
 import com.jakewharton.rxbinding2.support.v7.widget.RxSearchView
 import com.jakewharton.rxbinding2.support.v7.widget.queryTextChangeEvents
+import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.Completable
 //]
 import io.reactivex.Observable
@@ -39,8 +42,10 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_search.*
 // import 문에 startActivity 함수를 추가합니다.
 import org.jetbrains.anko.startActivity
+import javax.inject.Inject
 
-class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
+// AppCompatActivity 대신 DaggerAppCompatActivity를 상속합니다.
+class SearchActivity : DaggerAppCompatActivity(), SearchAdapter.ItemClickListener {
 
     companion object {
         const val TAG = "SearchActivity"
@@ -97,14 +102,26 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
     //[ By viewmodel
     // SearchViewModel를 생성할 때 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
-        SearchViewModelFactory(
-                provideGithubApi(this),
-                provideSearchHistoryDao(this))
+        //SearchViewModelFactory(provideGithubApi(this), provideSearchHistoryDao(this))
+        //[ By dagger_1
+        // 대거를 통해 주입받은 객체를 생성자의 인자로 전달합니다.
+        SearchViewModelFactory(githubApi, searchHistoryDao)
+        //]
     }
 
     // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: SearchViewModel
     //]
+
+    //[ ++ By dagger_1
+    // 대거를 통해 GithubApi 객체를 주입받는 프로퍼티를 선언합니다.
+    @Inject
+    lateinit var githubApi: GithubApi
+
+    // 대거를 통해 SearchHistoryDao 객체를 주입받는 프로퍼티를 선언합니다.
+    @Inject
+    lateinit var searchHistoryDao: SearchHistoryDao
+    //] -- By dagger_1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogMsg.w(TAG, "onCreate()  savedInstanceState: $savedInstanceState");

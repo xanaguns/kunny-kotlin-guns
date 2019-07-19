@@ -7,21 +7,25 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.androidhuman.example.simplegithub.R
-import com.androidhuman.example.simplegithub.api.provideGithubApi
+import com.androidhuman.example.simplegithub.api.GithubApi
+//import com.androidhuman.example.simplegithub.api.provideGithubApi
 // 연산자 오버로딩 함수를 import 문에 추가합니다.
 import com.androidhuman.example.simplegithub.extensions.plusAssign
 //[ By lifecycle
 import com.androidhuman.example.simplegithub.rx.AutoClearedDisposable
 //]
 import com.androidhuman.example.simplegithub.ui.GlideApp
+import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_repository.*
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
-class RepositoryActivity : AppCompatActivity() {
+// AppCompatActivity 대신 DaggerAppCompatActivity를 상속합니다.
+class RepositoryActivity : DaggerAppCompatActivity() {
 
     // 정적 필드로 정의되어 있던 항목은 동반 객체 내부에 정의됩니다.
     companion object {
@@ -59,12 +63,22 @@ class RepositoryActivity : AppCompatActivity() {
 
     // RepositoryViewModel을 생성하기 위해 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
-        RepositoryViewModelFactory(provideGithubApi(this))
+        //RepositoryViewModelFactory(provideGithubApi(this))
+        //[ By dagger_1
+        // 대거를 통해 주입받은 객체를 생성자의 인자로 전달합니다.
+        RepositoryViewModelFactory(githubApi)
+        //]
     }
 
     // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: RepositoryViewModel
     //] -- By viewmodel
+
+    //[ By dagger_1
+    // 대거를 통해 GithubApi 객체를 주입받는 프로퍼티를 선언합니다.
+    @Inject
+    lateinit var githubApi: GithubApi
+    //]
 
     internal val dateFormatInResponse = SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ssX", Locale.getDefault())

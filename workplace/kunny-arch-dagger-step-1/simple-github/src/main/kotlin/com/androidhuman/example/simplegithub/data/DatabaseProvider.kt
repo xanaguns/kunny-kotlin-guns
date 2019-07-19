@@ -3,6 +3,8 @@ package com.androidhuman.example.simplegithub.data
 import android.arch.persistence.room.Room
 import android.content.Context
 
+//[ ++ By dagger_1
+/*
 //[ By room
 // SimpleGithubDatabase의 인스턴스를 저장합니다.
 private var instance: SimpleGithubDatabase? = null
@@ -24,3 +26,5 @@ private fun provideDatabase(context: Context): SimpleGithubDatabase {
     return instance!!
 }
 //]
+// */
+//] -- By dagger_1

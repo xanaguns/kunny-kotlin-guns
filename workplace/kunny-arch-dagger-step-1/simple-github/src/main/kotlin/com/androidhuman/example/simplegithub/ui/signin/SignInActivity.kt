@@ -11,7 +11,8 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.androidhuman.example.simplegithub.BuildConfig
 import com.androidhuman.example.simplegithub.R
-import com.androidhuman.example.simplegithub.api.provideAuthApi
+import com.androidhuman.example.simplegithub.api.AuthApi
+//import com.androidhuman.example.simplegithub.api.provideAuthApi
 import com.androidhuman.example.simplegithub.data.AuthTokenProvider
 // 연산자 오버로딩 함수를 import 문에 추가합니다.
 import com.androidhuman.example.simplegithub.extensions.plusAssign
@@ -20,6 +21,7 @@ import com.androidhuman.example.simplegithub.rx.AutoClearedDisposable
 //]
 import com.androidhuman.example.simplegithub.ui.main.MainActivity
 import com.androidhuman.example.simplegithub.util.LogMsg
+import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_sign_in.*
@@ -28,8 +30,10 @@ import org.jetbrains.anko.clearTask
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.newTask
+import javax.inject.Inject
 
-class SignInActivity : AppCompatActivity() {
+// AppCompatActivity 대신 DaggerAppCompatActivity를 상속합니다.
+class SignInActivity : DaggerAppCompatActivity() {
 
     companion object {
         const val TAG = "SignInActivity"
@@ -66,12 +70,28 @@ class SignInActivity : AppCompatActivity() {
 
     // SignInViewModel을 생성할 때 필요한 뷰모델 팩토리 클래스의 인스턴스를 생성합니다.
     internal val viewModelFactory by lazy {
-        SignInViewModelFactory(provideAuthApi(), AuthTokenProvider(this))
+        //SignInViewModelFactory(provideAuthApi(), AuthTokenProvider(this))
+        //[ By dagger_1
+        // 대거를 통해 주입받은 객체를 생성자의 인자로 전달합니다.
+        SignInViewModelFactory(authApi, authTokenProvider)
+        //]
     }
 
     // 뷰모델의 인스턴스는 onCreate()에서 받으므로, lateinit으로 선언합니다.
     lateinit var viewModel: SignInViewModel
     //] -- By viewmodel
+
+    //[ ++ By dagger_1
+    // 대거를 통해 AuthApi 객체를 주입받는 프로퍼티를 선언합니다.
+    // @Inject 어노테이션을 추가해야 대거로부터 객체를 주입받을 수 있습니다.
+    // 선언 시점에 프로퍼티를 초기화할 수 없으므로 lateinit var로 선언합니다.
+    @Inject
+    lateinit var authApi: AuthApi
+
+    // 대거를 통해 AuthTokenProvider 객체를 주입받는 프로퍼티를 선언합니다.
+    @Inject
+    lateinit var authTokenProvider: AuthTokenProvider
+    //] -- By dagger_1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LogMsg.w(TAG, "onCreate()")
